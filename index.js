@@ -1,6 +1,8 @@
 import dotenv from "dotenv";
 import express from "express";
 import mongoose from "mongoose";
+import cors from "cors";
+dotenv.config();
 
 import studentRoutes from "./routes/student.routes.js";
 
@@ -8,7 +10,13 @@ const app = express();
 app.use(express.json());
 const port = 8000;
 
-dotenv.config();
+const corsOptions = {
+  origin: "*", 
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+app.use(cors(corsOptions));
 
 app.use(express.json({limit: "10mb"}));
 app.use(express.urlencoded({limit: "10mb", extended: true}))
