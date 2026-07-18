@@ -9,6 +9,7 @@ export const GetLeftStudents = async (req, res) => {
         $unset: {
           attendance: "",
           testSeries: "",
+          fees: "",
         },
       }
     );
