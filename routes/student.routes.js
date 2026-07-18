@@ -25,7 +25,7 @@ router.put("/update/:id", UpdateStudentRecord);
 router.delete("/delete/:id", DeleteStudent);
 router.post("/attendance", MarkAttendance);
 router.get("/attendance/all", GetAttendance);
-router.delete("/attdendance/clear", ClearAttendanceRecords)
+router.post("/attdendance/clear", ClearAttendanceRecords)
 router.post("/fee", CollectFee);
 router.get("/fee/all", GetFee);
 router.get("/dashboard/all", Dashboard)
