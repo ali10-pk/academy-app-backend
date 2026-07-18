@@ -13,6 +13,7 @@ import { GetMarks } from "../controllers/testSeries/GetMarks.js";
 import { UpdateMarks } from "../controllers/testSeries/UpdateMarks.js";
 import { Dashboard } from "../controllers/student/Dashboard.js";
 import { GetStudentByAdmissionNo } from "../controllers/student/SearchStudent.js";
+import { ClearAttendanceRecords } from "../controllers/attendance/DeleteAttendance.js";
 
 const router = express.Router();
 
@@ -24,6 +25,7 @@ router.put("/update/:id", UpdateStudentRecord);
 router.delete("/delete/:id", DeleteStudent);
 router.post("/attendance", MarkAttendance);
 router.get("/attendance/all", GetAttendance);
+router.delete("/attdendance/clear", ClearAttendanceRecords)
 router.post("/fee", CollectFee);
 router.get("/fee/all", GetFee);
 router.get("/dashboard/all", Dashboard)
