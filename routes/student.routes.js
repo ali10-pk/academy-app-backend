@@ -15,6 +15,7 @@ import { Dashboard } from "../controllers/student/Dashboard.js";
 import { GetStudentByAdmissionNo } from "../controllers/student/SearchStudent.js";
 import { ClearAttendanceRecords } from "../controllers/attendance/DeleteAttendance.js";
 import { DeleteMarks } from "../controllers/testSeries/DeleteMarks.js";
+import { GetLeftStudents } from "../controllers/student/Academy.js";
 
 const router = express.Router();
 
@@ -34,6 +35,7 @@ router.post("/marks", AddMarks);
 router.get("/marks/all", GetMarks);
 router.put("/update-marks", UpdateMarks);
 router.post("/delete-marks", DeleteMarks);
+router.get("/academy", GetLeftStudents);
 
 
 export default router;
