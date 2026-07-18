@@ -1,89 +1,125 @@
+import Student from "../../models/student.model.js";
+
 export const GetMarks = async (req, res) => {
   try {
-    // Look for 'admissionNo' in query instead of 'studentId'
-    const { admissionNo, className, section, subject, testName } = req.query;
+    const { admissionNo, className, section } = req.query;
 
-    // ==========================================
-    // SCENARIO 1: Individual Student Marksheet
-    // ==========================================
+    // =====================================================
+    // Individual Student Result
+    // =====================================================
     if (admissionNo) {
-      // Find student by admissionNo
-      const student = await Student.findOne({ admissionNo }, {
-        name: 1,
-        admissionNo: 1,
-        className: 1,
-        section: 1,
-        testSeries: 1,
-        totalTestObtained: 1,
-        totalTestMarks: 1,
+      const student = await Student.findOne({
+        admissionNo,
+        status: "Active",
       });
 
       if (!student) {
         return res.status(404).json({
           success: false,
-          message: "Student with this Admission No. not found.",
+          message: "Student not found.",
         });
       }
 
-      const percentage = student.totalTestMarks > 0 
-        ? ((student.totalTestObtained / student.totalTestMarks) * 100).toFixed(2) 
-        : "0.00";
+      const totalObtained = student.testSeries.reduce(
+        (sum, item) => sum + (item.obtainMarks || 0),
+        0
+      );
+
+      const totalMarks = student.testSeries.reduce(
+        (sum, item) => sum + (item.totalMarks || 0),
+        0
+      );
+
+      const percentage =
+        totalMarks > 0
+          ? Number(((totalObtained / totalMarks) * 100).toFixed(2))
+          : 0;
 
       return res.status(200).json({
         success: true,
         data: {
-          student,
-          summary: {
-            totalObtained: student.totalTestObtained,
-            totalPossible: student.totalTestMarks,
-            aggregatePercentage: `${percentage}%`
-          }
-        }
+          admissionNo: student.admissionNo,
+          name: student.name,
+          className: student.className,
+          section: student.section,
+          subjects: student.testSeries,
+          totalObtained,
+          totalMarks,
+          percentage,
+        },
       });
     }
 
-    // ==========================================
-    // SCENARIO 2: Class Test Ledger
-    // ==========================================
-    if (!className || !subject) {
+    // =====================================================
+    // Class Wise Result
+    // =====================================================
+    if (!className) {
       return res.status(400).json({
         success: false,
-        message: "Please specify 'className' and 'subject' or provide an 'admissionNo'.",
+        message: "className is required.",
       });
     }
 
-    // Aggregation pipeline remains same but ensures it returns admissionNo
-    const classLedger = await Student.aggregate([
-      { $match: { className, status: "Active", ...(section && { section }) } },
-      {
-        $project: {
-          name: 1,
-          admissionNo: 1, // Keep this as the primary identifier
-          section: 1,
-          testResults: {
-            $filter: {
-              input: "$testSeries",
-              as: "test",
-              cond: {
-                $and: [
-                  { $eq: ["$$test.subject", subject] },
-                  testName ? { $eq: ["$$test.testName", testName] } : { $literal: true }
-                ]
-              }
-            }
-          }
-        }
-      },
-      { $sort: { name: 1 } }
-    ]);
+    const query = {
+      className,
+      status: "Active",
+    };
+
+    if (section) {
+      query.section = section;
+    }
+
+    const students = await Student.find(query).lean();
+
+    const result = students.map((student) => {
+      const totalObtained = student.testSeries.reduce(
+        (sum, item) => sum + (item.obtainMarks || 0),
+        0
+      );
+
+      const totalMarks = student.testSeries.reduce(
+        (sum, item) => sum + (item.totalMarks || 0),
+        0
+      );
+
+      const percentage =
+        totalMarks > 0
+          ? Number(((totalObtained / totalMarks) * 100).toFixed(2))
+          : 0;
+
+      return {
+        admissionNo: student.admissionNo,
+        name: student.name,
+        className: student.className,
+        section: student.section,
+        subjects: student.testSeries,
+        totalObtained,
+        totalMarks,
+        percentage,
+      };
+    });
+
+    // Sort by percentage (highest first)
+    result.sort((a, b) => b.percentage - a.percentage);
+
+    // Assign positions
+    result.forEach((student, index) => {
+      student.position = index + 1;
+    });
 
     return res.status(200).json({
       success: true,
-      count: classLedger.length,
-      data: classLedger,
+      className,
+      section: section || "All",
+      count: result.length,
+      data: result,
     });
-
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    console.error("GetMarks Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
