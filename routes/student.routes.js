@@ -32,7 +32,7 @@ router.get("/fee/all", GetFee);
 router.get("/dashboard/all", Dashboard)
 router.post("/marks", AddMarks);
 router.get("/marks/all", GetMarks);
-router.put("/update-marks/", UpdateMarks);
+router.put("/update-marks", UpdateMarks);
 router.post("/delete-marks", DeleteMarks);
 
 
