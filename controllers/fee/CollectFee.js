@@ -1,22 +1,14 @@
-import mongoose from "mongoose";
 import Student from "../../models/student.model.js";
 
 export const CollectFee = async (req, res) => {
   try {
-    const { studentId, month, amount, paidAmount, paymentMethod, remarks } = req.body;
+    const { admissionNo, month, amount, paidAmount, paymentMethod, remarks } = req.body;
 
     // 1. Basic validation
-    if (!studentId || !month || amount === undefined || paidAmount === undefined) {
+    if (!admissionNo || !month || amount === undefined || paidAmount === undefined) {
       return res.status(400).json({
         success: false,
-        message: "Please fill in all required fields: studentId, month, total amount, and paidAmount.",
-      });
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(studentId)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid Student ID format.",
+        message: "Please fill in all required fields: admissionNo, month, total amount, and paidAmount.",
       });
     }
 
@@ -53,9 +45,9 @@ export const CollectFee = async (req, res) => {
       remarks: remarks || "",
     };
 
-    // 4. Try updating an existing entry for that month
+    // 4. Try updating an existing entry for that month using admissionNo
     let updatedStudent = await Student.findOneAndUpdate(
-      { _id: studentId, "fees.month": month },
+      { admissionNo: admissionNo, "fees.month": month },
       { 
         $set: { 
           "fees.$[elem]": feeData 
@@ -68,10 +60,10 @@ export const CollectFee = async (req, res) => {
       }
     );
 
-    // 5. If it wasn't matched/updated, push a fresh month object instead
+    // 5. If it wasn't matched/updated, push a fresh month object under the student matching admissionNo
     if (!updatedStudent) {
-      updatedStudent = await Student.findByIdAndUpdate(
-        studentId,
+      updatedStudent = await Student.findOneAndUpdate(
+        { admissionNo: admissionNo },
         { 
           $push: { fees: feeData } 
         },
@@ -82,7 +74,7 @@ export const CollectFee = async (req, res) => {
     if (!updatedStudent) {
       return res.status(404).json({
         success: false,
-        message: "Student record not found.",
+        message: "Student record not found with the provided Admission Number.",
       });
     }
 
