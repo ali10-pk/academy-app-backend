@@ -31,11 +31,11 @@ router.post("/attendance/clear", ClearAttendanceRecords)
 router.post("/fee", CollectFee);
 router.get("/fee/all", GetFee);
 router.get("/dashboard/all", Dashboard)
+router.get("/academy/all", GetLeftStudents);
 router.post("/marks", AddMarks);
 router.get("/marks/all", GetMarks);
 router.put("/update-marks", UpdateMarks);
 router.post("/delete-marks", DeleteMarks);
-router.get("/academy", GetLeftStudents);
 
 
 export default router;
