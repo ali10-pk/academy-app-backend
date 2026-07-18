@@ -14,6 +14,7 @@ import { UpdateMarks } from "../controllers/testSeries/UpdateMarks.js";
 import { Dashboard } from "../controllers/student/Dashboard.js";
 import { GetStudentByAdmissionNo } from "../controllers/student/SearchStudent.js";
 import { ClearAttendanceRecords } from "../controllers/attendance/DeleteAttendance.js";
+import { DeleteMarks } from "../controllers/testSeries/DeleteMarks.js";
 
 const router = express.Router();
 
@@ -32,6 +33,7 @@ router.get("/dashboard/all", Dashboard)
 router.post("/marks", AddMarks);
 router.get("/marks/all", GetMarks);
 router.put("/update-marks/", UpdateMarks);
+router.post("/delete-marks", DeleteMarks);
 
 
 export default router;
