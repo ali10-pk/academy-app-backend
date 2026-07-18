@@ -1,23 +1,42 @@
-import Student from "../models/student.js";
+import Student from "../../models/student.model.js";
 
 export const GetLeftStudents = async (req, res) => {
   try {
-    const students = await Student.find(
+    // Permanently remove attendance and testSeries
+    await Student.updateMany(
       { status: "Left" },
-      "-attendance -testSeries"
-    ).sort({ updatedAt: -1 });
+      {
+        $unset: {
+          attendance: "",
+          testSeries: "",
+        },
+      }
+    );
 
-    return res.status(200).json({
+    // Fetch updated students
+    const students = await Student.find({ status: "Left" }).sort({
+      updatedAt: -1,
+    });
+
+    if (students.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No left students found.",
+      });
+    }
+
+    res.status(200).json({
       success: true,
       count: students.length,
       students,
     });
   } catch (error) {
-    console.error(error);
+    console.error("GetLeftStudents Error:", error);
 
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Internal Server Error",
+      error: error.message,
     });
   }
 };
