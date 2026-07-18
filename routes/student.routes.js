@@ -12,12 +12,14 @@ import { AddMarks } from "../controllers/testSeries/AddMarks.js";
 import { GetMarks } from "../controllers/testSeries/GetMarks.js";
 import { UpdateMarks } from "../controllers/testSeries/UpdateMarks.js";
 import { Dashboard } from "../controllers/student/Dashboard.js";
+import { GetStudentByAdmissionNo } from "../controllers/student/SearchStudent.js";
 
 const router = express.Router();
 
 router.post("/addnew", AddNewStudent);
 router.get("/all", GetAllStudents);
 router.get("/:id", GetStudentByID);
+router.get("/search/:admissionNo", GetStudentByAdmissionNo);
 router.put("/update/:id", UpdateStudentRecord);
 router.delete("/delete/:id", DeleteStudent);
 router.post("/attendance", MarkAttendance);
