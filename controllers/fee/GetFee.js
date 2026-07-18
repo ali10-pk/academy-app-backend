@@ -1,65 +1,59 @@
-import mongoose from "mongoose";
 import Student from "../../models/student.model.js";
 
 export const GetFee = async (req, res) => {
   try {
-    const { month, className, section, studentId } = req.query;
+    const { month, className, section, admissionNo } = req.query;
 
-    // ==========================================
+    // ========================================================
     // SCENARIO 1: Get complete fee history of a single student
-    // ==========================================
-    if (studentId) {
-      if (!mongoose.Types.ObjectId.isValid(studentId)) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid Student ID format.",
-        });
-      }
-
-      const student = await Student.findById(studentId, {
-        name: 1,
-        admissionNo: 1,
-        className: 1,
-        section: 1,
-        status: 1,
-        fees: 1, // Return array of monthly fee payments
-      });
+    // ========================================================
+    if (admissionNo) {
+      const student = await Student.findOne(
+        { admissionNo: admissionNo.trim() },
+        {
+          name: 1,
+          admissionNo: 1,
+          className: 1,
+          section: 1,
+          status: 1,
+          fees: 1, // Return array of all historical monthly objects
+        }
+      );
 
       if (!student) {
         return res.status(404).json({
           success: false,
-          message: "Student record not found.",
+          message: "Student record not found with the provided Admission Number.",
         });
       }
 
       return res.status(200).json({
         success: true,
-        message: "Student fee payment history retrieved.",
+        message: "Student fee payment history retrieved successfully.",
         data: student,
       });
     }
 
-    // ==========================================
+    // ========================================================
     // SCENARIO 2: Get a class-wide fee ledger for a specific month
-    // ==========================================
+    // ========================================================
     if (!month || !className) {
       return res.status(400).json({
         success: false,
-        message: "Please provide both 'month' and 'className' query parameters.",
+        message: "Please provide both 'month' and 'className' query variables.",
       });
     }
 
-    // Build filters to scope down the target class
+    // Build structural filters to query the target group
     const matchFilters = {
       className,
-      status: "Active" // Focus on actively enrolled students
+      status: "Active" // Focus exclusively on active registrations
     };
     if (section) {
       matchFilters.section = section;
     }
 
-    // We use Mongoose/MongoDB aggregation to extract details and isolate 
-    // ONLY the targeted month's fee details, rather than loading bulk data.
+    // Isolate only the targeted month's fee sub-document state
     const feeLedger = await Student.aggregate([
       { $match: matchFilters },
       {
@@ -69,7 +63,6 @@ export const GetFee = async (req, res) => {
           admissionNo: 1,
           className: 1,
           section: 1,
-          // Filter down the array to only match the selected month string (e.g. "July")
           monthRecord: {
             $filter: {
               input: "$fees",
@@ -81,12 +74,11 @@ export const GetFee = async (req, res) => {
       },
       {
         $project: {
-          studentId: "$_id",
+          _id: 1,
           name: 1,
           admissionNo: 1,
           className: 1,
           section: 1,
-          // Deconstruct the filtered monthly record object
           feeDetails: {
             $ifNull: [
               { $arrayElemAt: ["$monthRecord", 0] },
@@ -101,7 +93,7 @@ export const GetFee = async (req, res) => {
           }
         }
       },
-      { $sort: { name: 1 } } // Keep student layout clean and alphabetical
+      { $sort: { name: 1 } } // Maintain perfectly alphabetical student rows
     ]);
 
     return res.status(200).json({
